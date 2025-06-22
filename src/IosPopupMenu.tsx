@@ -8,21 +8,31 @@ import {
 } from 'react-native';
 
 export type IosPopupMenuOptionProps = {
-  title: string;
-  icon?: string;
   id: string;
+  title: string;
+  titleColor?: string;
+  icon?: string;
+  iconColor?: string;
+  disabled?: boolean;
+  destructiveButton?: boolean;
+  cancelButton?: boolean;
+  onlyIos13OrBelow?: boolean; // This is used to indicate that the option should only be shown on iOS 13 or below
 };
 
 export type IosPopupMenuProps = PropsWithChildren & {
+  title?: string;
   options: IosPopupMenuOptionProps[];
-  oldIosVersionCancelIndex?: number;
-  oldIosVersionDestructiveIndex?: number;
   onSelect: (id: string) => void;
+  onOpen?: () => void;
+  onClose?: () => void;
 };
 
 type NativeMenuButtonProps = PropsWithChildren & {
+  title?: string;
   options: IosPopupMenuOptionProps[];
   onOptionSelect?: (event: NativeSyntheticEvent<{ action: string }>) => void;
+  onOpen?: () => void;
+  onClose?: () => void;
 };
 
 const globalWithMenu = globalThis as typeof globalThis & {
@@ -40,10 +50,11 @@ if (Platform.OS === 'ios') {
 
 const IosPopupMenu: React.FC<IosPopupMenuProps> = ({
   children,
+  title,
   options,
-  oldIosVersionCancelIndex,
-  oldIosVersionDestructiveIndex,
   onSelect,
+  onClose,
+  onOpen,
 }) => {
   const iosVersion = parseInt(String(Platform.Version), 10);
 
@@ -51,8 +62,16 @@ const IosPopupMenu: React.FC<IosPopupMenuProps> = ({
     ActionSheetIOS.showActionSheetWithOptions(
       {
         options: options.map((option) => option.title),
-        destructiveButtonIndex: oldIosVersionDestructiveIndex,
-        cancelButtonIndex: oldIosVersionCancelIndex,
+        destructiveButtonIndex: options.reduce(
+          (res: number[], option, index) => {
+            if (option.destructiveButton) {
+              res.push(index);
+            }
+            return res;
+          },
+          []
+        ),
+        cancelButtonIndex: options.findIndex((option) => option.cancelButton),
       },
       (buttonIndex) => onSelect(options[buttonIndex]?.id || '')
     );
@@ -69,8 +88,11 @@ const IosPopupMenu: React.FC<IosPopupMenuProps> = ({
 
   return (
     <NativeMenuButton
-      options={options}
+      title={title}
+      options={options.filter((option) => !option.onlyIos13OrBelow)}
       onOptionSelect={(e) => onSelect(e.nativeEvent.action)}
+      onClose={() => onClose?.()}
+      onOpen={() => onOpen?.()}
     >
       {children}
     </NativeMenuButton>

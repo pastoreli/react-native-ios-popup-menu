@@ -4,7 +4,15 @@ import React
 @objc(UIMenuButton)
 class UIMenuButton: UIView {
     @objc var onOptionSelect: RCTBubblingEventBlock?
-    
+    @objc var onOpen: RCTBubblingEventBlock?
+    @objc var onClose: RCTBubblingEventBlock?
+
+    @objc var title: String = "" {
+        didSet {
+            setupMenu()
+        }
+    }
+
     @objc var options: [[String: Any]] = [] {
         didSet {
             setupMenu()
@@ -29,34 +37,90 @@ class UIMenuButton: UIView {
         menuButton.tintColor = .clear
         menuButton.setTitle("", for: .normal)
 
+        menuButton.addTarget(self, action: #selector(menuWillOpen), for: .touchDown)
+
         addSubview(menuButton)
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        // Ensure menu button fills the whole area and stays on top
         menuButton.frame = bounds
         bringSubviewToFront(menuButton)
     }
 
-    private func setupMenu() {
-        print("Setting up UIMenu with options:", options)
+    @objc private func menuWillOpen() {
+        onOpen?(["event": "open"])
+    }
 
+    func hexToUIColor(_ hex: String) -> UIColor {
+      var cString = hex.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+
+      if cString.hasPrefix("#") {
+          cString.remove(at: cString.startIndex)
+      }
+
+      if cString.count == 3 {
+          cString = cString.map { "\($0)\($0)" }.joined()
+      }
+
+      guard cString.count == 6 else {
+          return UIColor.label;
+      }
+
+      var rgbValue: UInt64 = 0
+      Scanner(string: cString).scanHexInt64(&rgbValue)
+
+      return UIColor(
+          red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
+          green: CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
+          blue: CGFloat(rgbValue & 0x0000FF) / 255.0,
+          alpha: 1.0
+      )
+    }
+
+    private func setupMenu() {
         let actions = options.map { option -> UIAction in
             let title = option["title"] as? String ?? "Untitled"
             let id = option["id"] as? String ?? ""
             let iconName = option["icon"] as? String
-            let image = iconName != nil ? UIImage(systemName: iconName!) : nil
+            let iconColor = option["iconColor"] as? String
+            let isDisabled = option["disabled"] as? Bool ?? false
 
-            return UIAction(title: title, image: image) { _ in
-                self.onOptionSelect?(["action": id])
+            var image: UIImage? = nil
+            if let iconName = iconName {
+                image = UIImage(systemName: iconName)
+                if isDisabled {
+                    image = image?.withRenderingMode(.alwaysTemplate)
+                } else if let iconColor = iconColor {
+                    image = image?.withTintColor(hexToUIColor(iconColor), renderingMode: .alwaysOriginal)
+                }
             }
+            let titleColor = option["titleColor"] as? String ?? ""
+
+            let action = UIAction(
+              title: title,
+              image: image,
+              attributes: isDisabled ? [.disabled] : []
+            ) { _ in
+                self.onOptionSelect?(["action": id])
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.onClose?(["event": "close"])
+                }
+            }
+
+            let attributes: [NSAttributedString.Key: Any] = [
+                .foregroundColor: hexToUIColor(titleColor),
+                .font: UIFont.systemFont(ofSize: 16)
+            ]
+
+            let attributed = NSAttributedString(string: title, attributes: attributes)
+            action.setValue(attributed, forKey: "attributedTitle")
+            return action
         }
 
-        menuButton.menu = UIMenu(title: "", children: actions)
+        menuButton.menu = UIMenu(title: title, children: actions)
     }
 
-    // Optional: Make sure touches are hitting the button
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
         let hitView = super.hitTest(point, with: event)
         return hitView
