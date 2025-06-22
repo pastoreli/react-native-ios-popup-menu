@@ -1,6 +1,6 @@
 {
   "name": "react-native-ios-popup-menu",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "description": "Ios native popup menu for react-native. Falls back to ActionSheet for versions below IOS14. Not support for Android",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
