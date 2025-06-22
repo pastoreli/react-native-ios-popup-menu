@@ -4,8 +4,8 @@ import React
 @objc(UIMenuButton)
 class UIMenuButton: UIView {
     @objc var onOptionSelect: RCTBubblingEventBlock?
-    @objc var onOpen: RCTBubblingEventBlock?
-    @objc var onClose: RCTBubblingEventBlock?
+    @objc var onOpenMenu: RCTBubblingEventBlock?
+    @objc var onCloseMenu: RCTBubblingEventBlock?
 
     @objc var title: String = "" {
         didSet {
@@ -19,7 +19,26 @@ class UIMenuButton: UIView {
         }
     }
 
+    @objc var userInterfaceStyle: String? {
+    didSet {
+            applyMenuStyle()
+        }
+    }
+
     private let menuButton = UIButton(type: .system)
+
+    private func applyMenuStyle() {
+        guard let style = userInterfaceStyle?.lowercased() else { return }
+
+        switch style {
+          case "dark":
+              menuButton.overrideUserInterfaceStyle = .dark
+          case "light":
+              menuButton.overrideUserInterfaceStyle = .light
+          default:
+              menuButton.overrideUserInterfaceStyle = .unspecified
+        }
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -49,7 +68,7 @@ class UIMenuButton: UIView {
     }
 
     @objc private func menuWillOpen() {
-        onOpen?(["event": "open"])
+        onOpenMenu?(["event": "openMenu"])
     }
 
     func hexToUIColor(_ hex: String) -> UIColor {
@@ -104,7 +123,7 @@ class UIMenuButton: UIView {
             ) { _ in
                 self.onOptionSelect?(["action": id])
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self.onClose?(["event": "close"])
+                    self.onCloseMenu?(["event": "closeMenu"])
                 }
             }
 

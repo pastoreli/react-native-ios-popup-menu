@@ -13,12 +13,9 @@ export default function App() {
             iconColor: '#F9B02B',
             icon: 'doc.on.doc',
             id: 'copy',
-            // destructiveButton: true,
           },
           {
             title: 'Save',
-            titleColor: '#FF9C98',
-            iconColor: '#FF9C98',
             icon: 'bookmark',
             id: 'save',
             destructiveButton: true,
@@ -37,9 +34,9 @@ export default function App() {
             onlyIos13OrBelow: true,
           },
         ]}
-        onSelect={(id) => console.log(`Selected: ${id}`)}
-        onClose={() => console.log('Menu closed')}
-        onOpen={() => console.log('Menu opened')}
+        onOptionSelect={(id) => console.log(`Selected: ${id}`)}
+        onCloseMenu={() => console.log('Menu closed')}
+        onOpenMenu={() => console.log('Menu opened')}
       >
         <View style={styles.button}>
           <Text style={styles.buttonText}>Open Menu</Text>
