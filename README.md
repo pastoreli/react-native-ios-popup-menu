@@ -2,6 +2,11 @@
 
 Ios native popup menu for react-native. Falls back to ActionSheet for versions below IOS14.
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/2284383d-f8af-4f15-a43b-ffbf1faac7be" width="300" alt="Ios14+ example" />
+  <img src="https://github.com/user-attachments/assets/19ac4404-b687-4e0c-9357-3fe7769389e9" width="300" alt="Other Example" />
+</p>
+
 ## Installation
 
 Using npm:
